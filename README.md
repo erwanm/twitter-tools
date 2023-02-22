@@ -90,3 +90,32 @@ One can see that in this case the filtering causes less and less users to be ret
 ```
 cat grandparents-snowballing.full/iter.?.grandparents.IRL > grandparents-snowballing.full.tsv
 ```
+
+The output file contains the following tab-separated columns:     
+
+```
+user_id username full_name user_description user_location country_ids
+```
+
+Note: `country_ids` are heuristically predicted from the user location with `filter-user-location.py` and the list of cities `places-iso3.tsv` obtained from https://simplemaps.com/data/world-cities (licence CC BY 4.0).
+
+## Collecting tweets authored by a set of users
+
+
+
+```
+cut -f 1 grandparents-snowballing.full.tsv > grandparents-snowballing.full.list
+```
+
+`timeline.py` collects the timeline of a (set of) user(s) as follows:
+
+```
+python3 timeline.py grandparents-snowballing.full.list grandparents-snowballing.full.timeline.tsv
+```
+
+The output file (2nd arg) contains the following tab-separated columns:     
+
+```
+user_id id text conversation_id created_at lang retweet_count reply_count like_count quote_count geo
+```
+
