@@ -99,6 +99,7 @@ user_id username full_name user_description user_location country_ids
 
 Note: `country_ids` are heuristically predicted from the user location with `filter-user-location.py` and the list of cities `places-iso3.tsv` obtained from https://simplemaps.com/data/world-cities (licence CC BY 4.0).
 
+
 ## Collecting tweets authored by a set of users
 
 
@@ -118,4 +119,33 @@ The output file (2nd arg) contains the following tab-separated columns:
 ```
 user_id id text conversation_id created_at lang retweet_count reply_count like_count quote_count geo
 ```
+
+
+## Collecting conversations by a set of users
+
+Recommended to proceed in two steps:
+
+1. Collect the conversations ids first
+2. From these conversations ids (or a subset of these) collect the tweets (possibly with a max number by conversation)
+
+```
+cut -f 1 retirement-users-details.tsv >retirement-users.txt
+mkdir retirement.convids
+python3 collect-conversations-for-users-incremental.py -c retirement-users.txt retirement.convids/id
+```
+Optionally select a random subset of conversations:
+
+```
+cat retirement.convids/id* | sort -u >retirement.convids.all
+random-lines.pl 10000 1 $(cat retirement.convids.all | wc -l) <retirement.convids.all >retirement.convids.10k
+```
+
+Then collect the tweets:
+
+```
+mkdir retirement.10k.tweets
+python3 collect-conversations-for-users-incremental.py -C -m 250 retirement.convids.10k retirement.10k.tweets/data
+```
+
+
 
