@@ -125,8 +125,8 @@ user_id id text conversation_id created_at lang retweet_count reply_count like_c
 
 Recommended to proceed in two steps:
 
-# Collect the conversations ids first
-# From these conversations ids (or a subset of these) collect the tweets (possibly with a max number by conversation)
+1. Collect the conversations ids first
+2. From these conversations ids (or a subset of these) collect the tweets (possibly with a max number by conversation)
 
 ```
 cut -f 1 retirement-users-details.tsv >retirement-users.txt
