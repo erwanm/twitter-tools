@@ -11,7 +11,9 @@ PROG_NAME = "collect-following.py"
 skip_existing_output = True
 
 follower = False
+detail_input_user = False
 overlap_min = 1
+print_only_if_location = True
 
 # Your bearer token here
 bearer_token = os.environ.get("BEARER_TOKEN")
@@ -33,8 +35,9 @@ def usage(out):
     print("    -h: print this help message.",file=out)
     print("    -o <min overlap>: include user if at least this number of initial users follow them",file=out)
     print("    -r: collect followers instead of following",file=out)
-    print("    -d : delete any existing output (default: skip if existing).",file=out)
-#    print("    -a: no filtering on location at all.",file=out)
+    print("    -d: delete any existing output (default: skip if existing).",file=out)
+    print("    -s: collect detailed profile for the input users themselves (instead of following/followers).",file=out)
+    print("    -e: print all users even if they don't have a location defined (default: only if location).",file=out)
 
     print("",file=out)
 
@@ -45,49 +48,68 @@ def collect_following(users, output_file):
 
     if not skip_existing_output or not exists(output_file):
 
-        # Iterate over our target users
-        for user_id in users:
-        
-            if follower:
-                content = t.followers(user_id)
-            else:
-                content = t.following(user_id)
-            
-            # apparently users can be provided either as ids or usernames
-            for i, following_page in enumerate(content):
+        if detail_input_user:
+            content = t.user_lookup(users)
+            for i, users_page in enumerate(content):
                 
-                if 'data' in following_page:
-                    print(f"Fetched a page of {len(following_page['data'])} following for user {user_id}", flush=True)
-                    for datum in following_page['data']:
+                if 'data' in users_page:
+                    print(f"Fetched a page of {len(users_page['data'])} users ", flush=True)
+                    for datum in users_page['data']:
                         followed[datum['id']].append(datum)
                 else:
-                    print(f"Warning: No 'data' field found:", following_page, file=sys.stderr, flush=True)
+                    print(f"Warning: No 'data' field found:", users_page, file=sys.stderr, flush=True)
+        else:
+
+            # Iterate over our target users
+            for user_id in users:
+            
+                if follower:
+                    content = t.followers(user_id)
+                else:
+                    content = t.following(user_id)
+                
+                # apparently users can be provided either as ids or usernames
+                for i, following_page in enumerate(content):
+                
+                    if 'data' in following_page:
+                        print(f"Fetched a page of {len(following_page['data'])} following for user {user_id}", flush=True)
+                        for datum in following_page['data']:
+                            followed[datum['id']].append(datum)
+                        else:
+                            print(f"Warning: No 'data' field found:", following_page, file=sys.stderr, flush=True)
 
         with open(output_file,"w") as outfile:
             outfile.write("user_id\tusername\tname\tdescription\tlocation\n")
             for (id, l) in followed.items():
                 if len(l) >= overlap_min:
                     datum = l[0]
-                    if "location" in datum:
+                    if not print_only_if_location or "location" in datum:
                         outfile.write("{}\t{}\t{}\t{}\t{}\n".format(datum.get("id"),
                                                                 datum.get("username"),
-                                                                datum.get("name"),
-                                                                ' '.join(datum.get("description").splitlines()),
-                                                                datum.get("location")
+                                                                fix_string(datum.get("name")),
+                                                                fix_string(datum.get("description")),
+                                                                fix_string(datum.get("location"))
                                                                 ))
 
     else:
         print(f"Skipping because {output_file} exists.", file=sys.stderr, flush=True)
 
  
+def fix_string(s):
+    if s is None:
+        return "NA"
+    else:
+        return ' '.join(s.splitlines())
 
 
 def main():
     global overlap_min 
     global follower
     global skip_existing_output
+    global detail_input_user
+    global print_only_if_location
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"ho:rd")
+        opts, args = getopt.getopt(sys.argv[1:],"ho:rdse")
     except getopt.GetoptError:
         usage(sys.stderr)
         sys.exit(2)
@@ -99,8 +121,12 @@ def main():
             overlap_min = int(arg)
         elif opt == "-r":
             follower = True
+        elif opt == "-s":
+            detail_input_user = True
         elif opt == "-d":
             skip_existing_output = False
+        elif opt == "-e":
+            print_only_if_location = False
 #        elif opt == "-c":
 #            with open(arg) as infile:
 #                accepted_places = [ line.rstrip() for line in infile ]
@@ -112,6 +138,8 @@ def main():
     if len(args) != 2:
         usage(sys.stderr)
         sys.exit(2)
+    if follower and detail_input_user:
+        raise Exception("-r and -s are not compatible.")
 
     users_file = args[0]
     output_file = args[1]
