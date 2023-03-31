@@ -149,3 +149,8 @@ python3 collect-conversations-for-users-incremental.py -C -m 250 retirement.conv
 
 
 
+## Collecting tweets by filtering keywords/queries
+
+```
+search-multiple-requests.py
+```
