@@ -14,6 +14,7 @@ follower = False
 detail_input_user = False
 overlap_min = 1
 print_only_if_location = True
+users_as_username = False
 
 # Your bearer token here
 bearer_token = os.environ.get("BEARER_TOKEN")
@@ -36,7 +37,9 @@ def usage(out):
     print("    -o <min overlap>: include user if at least this number of initial users follow them",file=out)
     print("    -r: collect followers instead of following",file=out)
     print("    -d: delete any existing output (default: skip if existing).",file=out)
-    print("    -s: collect detailed profile for the input users themselves (instead of following/followers).",file=out)
+    print("    -s: collect detailed profile for the input users themselves (instead of following/followers);",file=out)
+    print("        IMPORTANT: expects user ids as input, not usernames (see -S) ",file=out)
+    print("    -S: Same as -s but with usernames instead of user ids.",file=out)
     print("    -e: print all users even if they don't have a location defined (default: only if location).",file=out)
 
     print("",file=out)
@@ -49,7 +52,7 @@ def collect_following(users, output_file):
     if not skip_existing_output or not exists(output_file):
 
         if detail_input_user:
-            content = t.user_lookup(users)
+            content = t.user_lookup(users, usernames = users_as_username)
             for i, users_page in enumerate(content):
                 
                 if 'data' in users_page:
@@ -75,8 +78,8 @@ def collect_following(users, output_file):
                         print(f"Fetched a page of {len(following_page['data'])} following for user {user_id}", flush=True)
                         for datum in following_page['data']:
                             followed[datum['id']].append(datum)
-                        else:
-                            print(f"Warning: No 'data' field found:", following_page, file=sys.stderr, flush=True)
+                    else:
+                        print(f"Warning: No 'data' field found:", following_page, file=sys.stderr, flush=True)
 
         with open(output_file,"w") as outfile:
             outfile.write("user_id\tusername\tname\tdescription\tlocation\n")
@@ -108,8 +111,9 @@ def main():
     global skip_existing_output
     global detail_input_user
     global print_only_if_location
+    global users_as_username
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"ho:rdse")
+        opts, args = getopt.getopt(sys.argv[1:],"ho:rdsSe")
     except getopt.GetoptError:
         usage(sys.stderr)
         sys.exit(2)
@@ -123,6 +127,10 @@ def main():
             follower = True
         elif opt == "-s":
             detail_input_user = True
+            users_as_username = False
+        elif opt == "-S":
+            detail_input_user = True
+            users_as_username = True
         elif opt == "-d":
             skip_existing_output = False
         elif opt == "-e":
