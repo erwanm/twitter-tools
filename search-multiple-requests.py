@@ -7,6 +7,8 @@ from collections import defaultdict
 PROG_NAME = "search-multiple-requests.py"
 
 extra_string = ""
+max_tweets = None
+
 
 # Your bearer token here
 bearer_token = os.environ.get("BEARER_TOKEN")
@@ -27,7 +29,7 @@ def usage(out):
     print("  Options:")
     print("    -h: print this help message.",file=out)
     print("    -a <extra string>: add this string to every request",file=out)
-
+    print("    -m <N> stop collecting for query after N tweets",file=out)
     print("",file=out)
 
 
@@ -41,11 +43,13 @@ def run_queries(requests, output_file):
             if len(extra_string) > 0:
                 r += " " + extra_string
             # Iterate over pages of tweets
+            nb_collected = 0
             try:
                 for i, tweets in enumerate(t.search_all(r)): 
 
                     print(f"Fetched a page of {len(tweets['data'])} tweets for query {r}")
                     for datum in tweets['data']:
+                        nb_collected += len(tweets['data'])
                         outfile.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(r,
                                                                                            datum.get("id"),
                                                                                            datum.get("author_id"),
@@ -60,6 +64,8 @@ def run_queries(requests, output_file):
                                                                                            datum['public_metrics']["quote_count"],
                                                                                            datum.get("geo")
                                                                 ))
+                    if max_tweets is not None and nb_collected >= max_tweets:
+                        break
             except:
                 print("Warning: an error occcured with the query '"+r+"'", file=sys.stderr)
 
@@ -71,8 +77,9 @@ def run_queries(requests, output_file):
 
 def main():
     global extra_string
+    global max_tweets
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"ha:")
+        opts, args = getopt.getopt(sys.argv[1:],"ha:m:")
     except getopt.GetoptError:
         usage(sys.stderr)
         sys.exit(2)
@@ -82,6 +89,8 @@ def main():
             sys.exit()
         elif opt == "-a":
             extra_string = arg
+        elif opt == "-m":
+            max_tweets = int(arg)
 
     if len(args) != 2:
         usage(sys.stderr)
@@ -100,3 +109,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
