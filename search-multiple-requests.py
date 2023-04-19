@@ -48,8 +48,8 @@ def run_queries(requests, output_file):
                 for i, tweets in enumerate(t.search_all(r)): 
 
                     print(f"Fetched a page of {len(tweets['data'])} tweets for query {r}")
+                    nb_collected += len(tweets['data'])
                     for datum in tweets['data']:
-                        nb_collected += len(tweets['data'])
                         outfile.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(r,
                                                                                            datum.get("id"),
                                                                                            datum.get("author_id"),
@@ -65,6 +65,7 @@ def run_queries(requests, output_file):
                                                                                            datum.get("geo")
                                                                 ))
                     if max_tweets is not None and nb_collected >= max_tweets:
+                        print(nb_collected, max_tweets)
                         break
             except:
                 print("Warning: an error occcured with the query '"+r+"'", file=sys.stderr)
