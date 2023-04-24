@@ -149,8 +149,25 @@ python3 collect-conversations-for-users-incremental.py -C -m 250 retirement.conv
 
 
 
-## Collecting tweets by filtering keywords/queries
+## Collecting tweets by searching keywords/queries
+
+This script processes a list of queries provided one by line in a text file. Example:
 
 ```
-search-multiple-requests.py
+python3 search-multiple-requests.py -a '-is:retweet' -m 10000 queries.list queries.tweets
 ```
+
+- The `-a` option adds the argument to the query, in this case `-is:retweet` means not to include retweets in the results.
+
+
+## Simple sentiment analysis
+
+This script requires Spacy and TextBlob, see [documentation](https://spacy.io/universe/project/spacy-textblob).
+
+```
+cat data.tweets  | cut -f 4 | python3 ../bin/sentiment-spacy.py data.sentiment 
+```
+
+* The input sentences/tweets are read one by line, the output sentiment values are provided for every sentence/tweet in the same order line by line.
+* TextBlob provides three values, provided as three columns in the output: polarity, subjectivty, and sentiment assessments.
+
