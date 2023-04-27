@@ -180,8 +180,8 @@ This script requires Spacy.
 cat data.tweets  | cut -f 4 | python3 ../bin/pronouns-spacy.py data.pronouns
 ```
 
-* The input sentences/tweets are read one by line, the output is also provided for every sentence/tweet in the same order line by line *but:*
+* The input sentences/tweets are read one by line, the output is also provided for every sentence/tweet in the same order line by line **but:**
     * one line is added at the start of the file as header, in particular describing the different key/value pairs for morphological stats
-    * *one line is added at the end of the file*, containing the global stats for lemmas and features over all the input sentences/tweets
+    * **one line is added at the end of the file**, containing the global stats for lemmas and features over all the input sentences/tweets
 
 
