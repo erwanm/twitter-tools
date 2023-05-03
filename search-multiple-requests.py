@@ -3,6 +3,8 @@ import os
 import json
 import sys, getopt
 from collections import defaultdict
+import datetime
+
 
 PROG_NAME = "search-multiple-requests.py"
 
@@ -13,6 +15,9 @@ max_tweets = None
 # Your bearer token here
 bearer_token = os.environ.get("BEARER_TOKEN")
 t = Twarc2(bearer_token=bearer_token)
+
+datetime_format = "%Y-%m-%d"
+utc_start_time_timeline = datetime.datetime.strptime("2010-12-01", datetime_format)
 
 
 def usage(out):
@@ -30,6 +35,7 @@ def usage(out):
     print("    -h: print this help message.",file=out)
     print("    -a <extra string>: add this string to every request",file=out)
     print("    -m <N> stop collecting for query after N tweets",file=out)
+    print("    -t <start date>: start date with format 2022-12-31, year>2010",file=out)
     print("",file=out)
 
 
@@ -45,7 +51,7 @@ def run_queries(requests, output_file):
             # Iterate over pages of tweets
             nb_collected = 0
             try:
-                for i, tweets in enumerate(t.search_all(r)): 
+                for i, tweets in enumerate(t.search_all(r, start_time=utc_start_time_timeline)): 
 
                     print(f"Fetched a page of {len(tweets['data'])} tweets for query {r}")
                     nb_collected += len(tweets['data'])
@@ -79,8 +85,9 @@ def run_queries(requests, output_file):
 def main():
     global extra_string
     global max_tweets
+    global utc_start_time_timeline
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"ha:m:")
+        opts, args = getopt.getopt(sys.argv[1:],"ha:m:t:")
     except getopt.GetoptError:
         usage(sys.stderr)
         sys.exit(2)
@@ -92,6 +99,8 @@ def main():
             extra_string = arg
         elif opt == "-m":
             max_tweets = int(arg)
+        elif opt == "-t":
+            utc_start_time_timeline = utc_start_time_timeline = datetime.datetime.strptime(arg, datetime_format)
 
     if len(args) != 2:
         usage(sys.stderr)
@@ -110,8 +119,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
 
 

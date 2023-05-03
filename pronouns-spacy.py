@@ -8,6 +8,8 @@ PROG_NAME = "pronouns-spacy.py"
 
 nlp = spacy.load("en_core_web_sm")
 
+possesssive_included = True
+
 
 def usage(out):
     print("Usage: cat <sentences> | "+PROG_NAME+" [options] <output file>",file=out)
@@ -18,13 +20,15 @@ def usage(out):
     print("",file=out)
     print("  Options:")
     print("    -h: print this help message.",file=out)
+    print("    -p: only personal pronouns (default) and NOT possessive pronouns.",file=out)
     print("",file=out)
 
 
 
 def main():
+    global possesssive_included
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"h")
+        opts, args = getopt.getopt(sys.argv[1:],"hp")
     except getopt.GetoptError:
         usage(sys.stderr)
         sys.exit(2)
@@ -32,8 +36,8 @@ def main():
         if opt == "-h":
             usage(sys.stdout)
             sys.exit()
-#        elif opt == "-l":
-#            use_lemma = True
+        elif opt == "-p":
+            possesssive_included = False
 #        elif opt == "-p":
 #            keep_pos = arg.split(",")
     if len(args) != 1:
@@ -53,7 +57,7 @@ def main():
         sentMorph = defaultdict(int)
         lemmas = defaultdict(int)
         for token in doc:
-            if token.pos_ == 'PRON':
+            if token.pos_ == 'PRON' and 'PronType=Prs' in token.morph and (possesssive_included or not 'Poss=Yes' in token.morph):
                 lemmas[token.lemma_] += 1
                 global_lemmas[token.lemma_] += 1
                 for keyValuePair in token.morph:
