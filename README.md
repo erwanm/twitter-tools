@@ -185,3 +185,11 @@ cat data.tweets  | cut -f 4 | python3 ../bin/pronouns-spacy.py data.pronouns
     * **one line is added at the end of the file**, containing the global stats for lemmas and features over all the input sentences/tweets
 
 
+## Topic modelling with Gensim 
+
+See directory `gensim`.
+
+## Misc
+
+See directory `misc`.
+
